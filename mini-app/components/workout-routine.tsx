@@ -45,7 +45,7 @@ function getRandomExercises(): Exercise[] {
   const count = Math.floor(Math.random() * 3) + 5; // 5-7 exercises
   while (routine.length < count) {
     const cat = categories[Math.floor(Math.random() * categories.length)];
-    const list = exercises[cat];
+    const list = exercises[cat as keyof typeof exercises];
     const ex = list[Math.floor(Math.random() * list.length)];
     if (!routine.find((e) => e.name === ex.name)) {
       routine.push(ex);
