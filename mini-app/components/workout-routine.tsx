@@ -108,7 +108,7 @@ export default function WorkoutRoutine() {
   const displayedRoutine = filterGroup ? routine.filter((e) => e.group === filterGroup) : routine;
   const totalTime = routine.reduce((sum, ex) => sum + getExerciseDuration(ex), 0);
   return (
-    <div className="flex flex-col gap-4 w-full max-w-2xl">
+    <div className="flex flex-col gap-4 w-full max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold text-center">Workout Routine Randomizer</h1>
       <div className="text-center text-sm text-muted-foreground">
         Total Exercises: {routine.length} | Total Time: {totalTime}s
