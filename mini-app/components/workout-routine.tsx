@@ -10,6 +10,12 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
+type Exercise = {
+  name: string;
+  description: string;
+  reps: string;
+};
+
 const exercises = {
   cardio: [
     { name: "Jumping Jacks", description: "Full body cardio exercise", reps: "30 seconds" },
@@ -33,9 +39,9 @@ const exercises = {
   ],
 };
 
-function getRandomExercises() {
+function getRandomExercises(): Exercise[] {
   const categories = Object.keys(exercises);
-  const routine = [];
+  const routine: Exercise[] = [];
   const count = Math.floor(Math.random() * 3) + 5; // 5-7 exercises
   while (routine.length < count) {
     const cat = categories[Math.floor(Math.random() * categories.length)];
@@ -49,7 +55,7 @@ function getRandomExercises() {
 }
 
 export default function WorkoutRoutine() {
-  const [routine, setRoutine] = useState(getRandomExercises());
+  const [routine, setRoutine] = useState<Exercise[]>(getRandomExercises());
 
   const generate = () => setRoutine(getRandomExercises());
 
