@@ -17,28 +17,29 @@ type Exercise = {
   name: string;
   description: string;
   reps: string;
+  group: string;
 };
 
 const exercises = {
   cardio: [
-    { name: "Jumping Jacks", description: "Full body cardio exercise", reps: "30 seconds" },
-    { name: "High Knees", description: "Run in place raising knees high", reps: "30 seconds" },
-    { name: "Burpees", description: "Full body strength and cardio", reps: "10 reps" },
+    { name: "Jumping Jacks", description: "Full body cardio exercise", reps: "30 seconds", group: "cardio" },
+    { name: "High Knees", description: "Run in place raising knees high", reps: "30 seconds", group: "cardio" },
+    { name: "Burpees", description: "Full body strength and cardio", reps: "10 reps", group: "cardio" },
   ],
   strength: [
-    { name: "Push Ups", description: "Upper body strength", reps: "15 reps" },
-    { name: "Squats", description: "Lower body strength", reps: "20 reps" },
-    { name: "Lunges", description: "Lower body strength", reps: "12 reps each leg" },
+    { name: "Push Ups", description: "Upper body strength", reps: "15 reps", group: "strength" },
+    { name: "Squats", description: "Lower body strength", reps: "20 reps", group: "strength" },
+    { name: "Lunges", description: "Lower body strength", reps: "12 reps each leg", group: "strength" },
   ],
   core: [
-    { name: "Plank", description: "Core stability", reps: "45 seconds" },
-    { name: "Russian Twists", description: "Oblique strength", reps: "20 reps" },
-    { name: "Bicycle Crunches", description: "Core and obliques", reps: "15 reps each side" },
+    { name: "Plank", description: "Core stability", reps: "45 seconds", group: "core" },
+    { name: "Russian Twists", description: "Oblique strength", reps: "20 reps", group: "core" },
+    { name: "Bicycle Crunches", description: "Core and obliques", reps: "15 reps each side", group: "core" },
   ],
   stretching: [
-    { name: "Hamstring Stretch", description: "Lower back and hamstrings", reps: "30 seconds each leg" },
-    { name: "Quad Stretch", description: "Front thigh stretch", reps: "30 seconds each leg" },
-    { name: "Shoulder Stretch", description: "Upper body stretch", reps: "30 seconds each arm" },
+    { name: "Hamstring Stretch", description: "Lower back and hamstrings", reps: "30 seconds each leg", group: "stretching" },
+    { name: "Quad Stretch", description: "Front thigh stretch", reps: "30 seconds each leg", group: "stretching" },
+    { name: "Shoulder Stretch", description: "Upper body stretch", reps: "30 seconds each arm", group: "stretching" },
   ],
 };
 
@@ -57,15 +58,36 @@ function getRandomExercises(difficulty: Difficulty, length: LengthOption): Exerc
   return routine;
 }
 
+function getIcon(group: string): string {
+  switch (group) {
+    case "cardio":
+      return "🏃‍♂️";
+    case "strength":
+      return "💪";
+    case "core":
+      return "🧘‍♂️";
+    case "stretching":
+      return "🤸‍♂️";
+    default:
+      return "";
+  }
+}
+
 export default function WorkoutRoutine() {
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [length, setLength] = useState<LengthOption>(5);
   const [routine, setRoutine] = useState<Exercise[]>(getRandomExercises(difficulty, length));
+  const [filterGroup, setFilterGroup] = useState<string | null>(null);
+  const [locked, setLocked] = useState<boolean[]>(Array(routine.length).fill(false));
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isRest, setIsRest] = useState<boolean>(false);
   const [restTime] = useState<number>(30);
   const [completed, setCompleted] = useState<boolean[]>([]);
+
+  useEffect(() => {
+    setLocked(Array(routine.length).fill(false));
+  }, [routine]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startWorkout = () => {
@@ -110,11 +132,22 @@ export default function WorkoutRoutine() {
     };
   }, [currentIndex, timeLeft, isRest]);
 
-  const generate = () => setRoutine(getRandomExercises(difficulty, length));
+  const generate = () => {
+    setRoutine((prev) => {
+      const newRoutine = getRandomExercises(difficulty, length);
+      return prev.map((ex, idx) => (locked[idx] ? ex : newRoutine[idx]));
+    });
+    setLocked(Array(routine.length).fill(false));
+  };
 
+  const displayedRoutine = filterGroup ? routine.filter((e) => e.group === filterGroup) : routine;
+  const totalTime = routine.reduce((sum, ex) => sum + getExerciseDuration(ex), 0);
   return (
     <div className="flex flex-col gap-4 w-full max-w-2xl">
       <h1 className="text-2xl font-bold text-center">Workout Routine Randomizer</h1>
+      <div className="text-center text-sm text-muted-foreground">
+        Total Exercises: {routine.length} | Total Time: {totalTime}s
+      </div>
       <div className="flex flex-col gap-2 w-full max-w-md">
         <label className="text-sm font-medium">Difficulty</label>
         <select
@@ -139,11 +172,25 @@ export default function WorkoutRoutine() {
           <option value={10}>10 Exercises</option>
         </select>
 
-        <Button onClick={generate} className="self-center mt-4">
+        <div className="flex flex-wrap gap-2 justify-center mt-4">
+          {Array.from(new Set(routine.map((e) => e.group))).map((g) => (
+            <Button
+              key={g}
+              variant={filterGroup === g ? "default" : "outline"}
+              onClick={() => setFilterGroup(g)}
+            >
+              {g}
+            </Button>
+          ))}
+          <Button variant="outline" onClick={() => setFilterGroup(null)}>
+            Clear All
+          </Button>
+        </div>
+        <Button onClick={generate} className="self-center mt-4 w-full sm:w-auto">
           Generate New Routine
         </Button>
       </div>
-      <Button onClick={startWorkout} className="self-center mt-2">
+      <Button onClick={startWorkout} className="self-center mt-2 w-full sm:w-auto">
         Start Workout
       </Button>
       {currentIndex >= 0 && (
@@ -152,6 +199,9 @@ export default function WorkoutRoutine() {
           <p>{routine[currentIndex].description}</p>
           <p className="mt-2">
             {isRest ? `Rest: ${timeLeft}s` : `Time left: ${timeLeft}s`}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Rest recommendation: {restTime}s between sets
           </p>
           <label className="flex items-center mt-2">
             <input
@@ -164,15 +214,45 @@ export default function WorkoutRoutine() {
           </label>
         </div>
       )}
-      <div className="grid gap-4">
-        {routine.map((ex, idx) => (
-          <Card key={idx}>
-            <CardHeader>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {displayedRoutine.map((ex, idx) => (
+          <Card key={idx} className="shadow-md rounded-lg p-4">
+            <CardHeader className="flex justify-between items-center">
               <CardTitle>{ex.name}</CardTitle>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setLocked((prev) =>
+                      prev.map((l, i) => (i === idx ? !l : l))
+                    );
+                  }}
+                >
+                  {locked[idx] ? "🔓" : "🔒"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setRoutine((prev) => {
+                      const newEx = getRandomExercises(difficulty, 1)[0];
+                      return prev.map((e, i) => (i === idx ? newEx : e));
+                    });
+                  }}
+                >
+                  🔄
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <CardDescription>{ex.description}</CardDescription>
-              <p className="mt-2 font-medium">Reps / Duration: {ex.reps}</p>
+              <p className="mt-2 font-medium">
+                <span className="inline-block bg-muted rounded px-2 py-1 text-xs mr-2">
+                  {getIcon(ex.group)} {ex.reps}
+                </span>
+                {ex.reps}
+              </p>
             </CardContent>
           </Card>
         ))}
