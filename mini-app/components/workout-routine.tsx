@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -84,58 +84,13 @@ export default function WorkoutRoutine() {
   const [routine, setRoutine] = useState<Exercise[]>(getRandomExercises(difficulty, length));
   const [filterGroup, setFilterGroup] = useState<string | null>(null);
   const [locked, setLocked] = useState<boolean[]>(Array(routine.length).fill(false));
-  const [currentIndex, setCurrentIndex] = useState<number>(-1);
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [isRest, setIsRest] = useState<boolean>(false);
-  const [restTime] = useState<number>(30);
-  const [completed, setCompleted] = useState<boolean[]>([]);
 
   useEffect(() => {
     setLocked(Array(routine.length).fill(false));
   }, [routine]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startWorkout = () => {
-    setCurrentIndex(0);
-    setCompleted(Array(routine.length).fill(false));
-    setTimeLeft(getExerciseDuration(routine[0]));
-    setIsRest(false);
-  };
 
-  const getExerciseDuration = (ex: Exercise): number => {
-    const match = ex.reps.match(/(\\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  };
 
-  useEffect(() => {
-    if (currentIndex === -1) return;
-    if (isRest) {
-      if (timeLeft <= 0) {
-        setIsRest(false);
-        setTimeLeft(getExerciseDuration(routine[currentIndex]));
-      } else {
-        timerRef.current = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
-      }
-    } else {
-      if (timeLeft <= 0) {
-        setCompleted((prev) => {
-          const newArr = [...prev];
-          newArr[currentIndex] = true;
-          return newArr;
-        });
-        if (currentIndex + 1 < routine.length) {
-          setCurrentIndex((i) => i + 1);
-          setIsRest(true);
-          setTimeLeft(restTime);
-        }
-      } else {
-        timerRef.current = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
-      }
-    }
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [currentIndex, timeLeft, isRest, restTime, routine]);
 
   const generate = () => {
     setRoutine((prev) => {
@@ -195,30 +150,6 @@ export default function WorkoutRoutine() {
           Generate New Routine
         </Button>
       </div>
-      <Button onClick={startWorkout} className="self-center mt-2 w-full sm:w-auto">
-        Start Workout
-      </Button>
-      {currentIndex >= 0 && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold">{routine[currentIndex].name}</h2>
-          <p>{routine[currentIndex].description}</p>
-          <p className="mt-2">
-            {isRest ? `Rest: ${timeLeft}s` : `Time left: ${timeLeft}s`}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Rest recommendation: {restTime}s between sets
-          </p>
-          <label className="flex items-center mt-2">
-            <input
-              type="checkbox"
-              checked={completed[currentIndex]}
-              onChange={() => {}}
-              className="mr-2"
-            />
-            Completed
-          </label>
-        </div>
-      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {displayedRoutine.map((ex, idx) => (
           <Card key={idx} className="shadow-md rounded-lg p-4">
