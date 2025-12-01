@@ -58,6 +58,11 @@ function getRandomExercises(difficulty: Difficulty, length: LengthOption): Exerc
   return routine;
 }
 
+function getRandomExercise(difficulty: Difficulty): Exercise {
+  // Return a single random exercise from the pool
+  return getRandomExercises(difficulty, 3)[0];
+}
+
 function getIcon(group: string): string {
   switch (group) {
     case "cardio":
@@ -130,7 +135,7 @@ export default function WorkoutRoutine() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [currentIndex, timeLeft, isRest]);
+  }, [currentIndex, timeLeft, isRest, restTime, routine]);
 
   const generate = () => {
     setRoutine((prev) => {
@@ -236,7 +241,7 @@ export default function WorkoutRoutine() {
                   size="icon"
                   onClick={() => {
                     setRoutine((prev) => {
-                      const newEx = getRandomExercises(difficulty, 1)[0];
+                      const newEx = getRandomExercise(difficulty);
                       return prev.map((e, i) => (i === idx ? newEx : e));
                     });
                   }}
