@@ -63,6 +63,11 @@ function getRandomExercise(difficulty: Difficulty): Exercise {
   return getRandomExercises(difficulty, 3)[0];
 }
 
+function getExerciseDuration(ex: Exercise): number {
+  const match = ex.reps.match(/(\\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
 function getIcon(group: string): string {
   switch (group) {
     case "cardio":
